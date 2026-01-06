@@ -11,6 +11,11 @@ function Navigation() {
   const [isSiswaOpen, setIsSiswaOpen] = useState(false);
   const [isPresensiOpen, setIsPresensiOpen] = useState(false);
   const location = useLocation();
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    sessionStorage.clear();
+    window.location.href = '/login';
+  };
 
   useEffect(() => {
     if (location.pathname === '/') {
@@ -79,7 +84,7 @@ function Navigation() {
             <img src={iconProfile} alt="" className='w-5 h-5'/>
             Admin
           </div>
-          <button className="flex items-center gap-2 text-gray-300 hover:text-red-400" >
+          <button onClick={handleLogout} className="flex items-center gap-2 text-gray-300 hover:text-red-400" >
             <img src={iconLogout} alt="" className='w-5 h-5'/>
             Logout
           </button>
