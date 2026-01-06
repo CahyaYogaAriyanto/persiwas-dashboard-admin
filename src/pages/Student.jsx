@@ -73,10 +73,25 @@ function Student() {
         await updateStudent(student_id, { id_kelas: newClassId });
     };
 
+    // const handleDelete = async (student_id) => {
+    //     await deleteStudent(student_id);
+    //     setStudentsData(prev => prev.filter(s => s.student_id !== student_id));
+    // };
     const handleDelete = async (student_id) => {
+    if (!window.confirm('Yakin ingin menghapus siswa ini?')) return;
+    try {
         await deleteStudent(student_id);
-        setStudentsData(prev => prev.filter(s => s.student_id !== student_id));
+
+        setStudentsData(prev =>
+            prev.filter(s => s.student_id !== student_id)
+        );
+        alert('Data Siswa Berhasil Dihapus', student_id);
+    } catch (error) {
+        console.error('Gagal menghapus siswa:', error);
+        alert('Gagal menghapus siswa. Cek console / backend.');
+    }
     };
+
 
     const handleAddStudent = async (e) => {
         e.preventDefault();

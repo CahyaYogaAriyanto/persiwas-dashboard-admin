@@ -54,7 +54,7 @@ export const createStudent = async (studentData, photos) => {
     }
 
     try {
-        const response = await fetch('http://localhost:8000/api/students/register', {
+        const response = await fetch('https://dolly-vaporescent-myla.ngrok-free.dev/api/students/register', {
             method: 'POST',
             body: formData,
         });
@@ -91,7 +91,7 @@ export const updateStudent = async (id, updates) => {
 
 export const deleteStudent = async (id) => {
   try {
-    const response = await fetch(`http://localhost:8000/api/students/${id}`, {
+    const response = await fetch(`https://dolly-vaporescent-myla.ngrok-free.dev/api/students/${id}`, {
       method: 'DELETE',
     });
 
