@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import logo from '../assets/images/icon-text-horizontal.png';
+import iconProfile from '../assets/images/icon-profile.png';
+import iconChevron from '../assets/images/icon-chevron.png';
+import iconTeacher from '../assets/images/icon-teacher.png';
+import iconPresence from '../assets/images/icon-presence.png';
+import iconLogout from '../assets/images/icon-logout.png';
 
 function Navigation() {
   const [isSiswaOpen, setIsSiswaOpen] = useState(false);
@@ -29,10 +35,10 @@ function Navigation() {
             <div>
               <button onClick={() => setIsSiswaOpen(!isSiswaOpen)} className="w-full flex items-center justify-between text-white">
                 <div className="flex items-center gap-3">
-                  <img src="src/assets/images/icon-profile.png" alt="" className='w-5 h-5'/>
+                  <img src={iconProfile} alt="" className='w-5 h-5'/>
                   Siswa
                 </div>
-                <img src="src/assets/images/icon-chevron-down.png" alt="" className={`w-4 h-4 transition-transform ${isSiswaOpen ? 'rotate-180' : ''}`}/>
+                <img src={iconChevron} alt="" className={`w-4 h-4 transition-transform ${isSiswaOpen ? 'rotate-90' : ''}`}/>
               </button>
               {isSiswaOpen && (
                 <div className="flex flex-col gap-2 mt-2 pl-8">
@@ -45,16 +51,16 @@ function Navigation() {
               )}
             </div>
             <Link to="/teacher" className="flex items-center gap-3 text-white">
-              <img src="src/assets/images/icon-teacher.png" alt="" className='w-6 h-6'/>
+              <img src={iconTeacher} alt="" className='w-6 h-6'/>
               Guru
             </Link>
             <div>
               <button onClick={() => setIsPresensiOpen(!isPresensiOpen)} className="w-full flex items-center justify-between text-white">
                 <div className="flex items-center gap-3">
-                  <img src="src/assets/images/icon-presence.png" alt="" className='w-6 h-6'/>
+                  <img src={iconPresence} alt="" className='w-6 h-6'/>
                   Presensi
                 </div>
-                <img src="src/assets/images/icon-chevron-down.png" alt="" className={`w-4 h-4 transition-transform ${isPresensiOpen ? 'rotate-180' : ''}`}/>
+                <img src={iconChevron} alt="" className={`w-4 h-4 transition-transform ${isPresensiOpen ? 'rotate-90' : ''}`}/>
               </button>
               {isPresensiOpen && (
                 <div className="flex flex-col gap-2 mt-2 pl-8">
@@ -70,11 +76,11 @@ function Navigation() {
         </div>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 text-gray-300">
-            <img src="src/assets/images/icon-profile.png" alt="" className='w-5 h-5'/>
+            <img src={iconProfile} alt="" className='w-5 h-5'/>
             Admin
           </div>
-          <button className="flex items-center gap-2 text-gray-300 hover:text-red-400">
-            <img src="src/assets/images/icon-logout.png" alt="" className='w-5 h-5'/>
+          <button className="flex items-center gap-2 text-gray-300 hover:text-red-400" >
+            <img src={iconLogout} alt="" className='w-5 h-5'/>
             Logout
           </button>
         </div>
