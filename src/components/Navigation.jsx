@@ -14,7 +14,7 @@ function Navigation() {
   const handleLogout = () => {
     localStorage.clear();
     sessionStorage.clear();
-    window.location.replace('/login');
+    window.location.replace('/');
   };
   useEffect(() => {
     if (location.pathname === '/') {
