@@ -12,9 +12,9 @@ function Navigation() {
   const [isPresensiOpen, setIsPresensiOpen] = useState(false);
   const location = useLocation();
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear();
     sessionStorage.clear();
-    window.location.href = '/login';
+    window.location.replace('/login');
   };
   useEffect(() => {
     if (location.pathname === '/') {
