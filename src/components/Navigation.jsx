@@ -16,7 +16,6 @@ function Navigation() {
     sessionStorage.clear();
     window.location.href = '/login';
   };
-
   useEffect(() => {
     if (location.pathname === '/') {
       setIsSiswaOpen(true);
@@ -34,7 +33,7 @@ function Navigation() {
     <div className="w-64 h-screen bg-[#0a0a23] text-white flex flex-col justify-between py-8 px-6">
         <div>
           <div className="flex items-center gap-3 mb-10">
-            <img src="src/assets/images/icon-text-horizontal.png" alt="" className='w-3/4'/>
+            <img src={logo} alt="" className='w-3/4'/>
           </div>
           <nav className="flex flex-col gap-4">
             <div>
