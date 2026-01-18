@@ -46,3 +46,37 @@ export const changePresenceStatus = async (id, status) => {
     }
     return data;
 };
+
+export const createPresencesForToday = async (students) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const presences = students.map(student => ({
+    student_id: student.student_id,
+    status_id: 3,
+    datetime: today.toISOString(),
+  }));
+
+  const { data, error } = await supabase
+    .from('precence')
+    .insert(presences);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+export const upsertPresences = async (presences) => {
+  const { data, error } = await supabase
+    .from('precence') 
+    .upsert(presences, {
+      onConflict: 'student_id,datetime',
+    })
+    .select();
+
+  if (error) throw error;
+  return data;
+};
+

@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import { fetchAllPresencesData, changePresenceStatus } from '../api/presence';
+import { fetchAllPresencesData, changePresenceStatus,createPresencesForToday,upsertPresences  } from '../api/presence';
+import { indoDateToISO } from '../helper/date';
 import { fetchAllStudents } from '../api/student';
 import { getStudentByClassId } from '../api/class';
+// apapap
+const getLocalDate = (datetime) => {
+  const d = new Date(datetime);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
 
 function Presence() {
   const location = useLocation();
@@ -68,9 +74,12 @@ function Presence() {
 
   useEffect(() => {
     if (studentsData.length > 0 && presenceHistory.length > 0) {
-      const dates = [...new Set(presenceHistory.map(p => new Date(p.datetime).toISOString().split('T')[0]))]
+      const dates = [...new Set(
+        presenceHistory.map(p => getLocalDate(p.datetime))
+      )]
         .sort((a, b) => new Date(b) - new Date(a)); // Sort dates descending
       setUniqueDates(dates);
+      
 
       const matrix = studentsData.reduce((acc, student) => {
         acc[student.student_id] = {
@@ -83,7 +92,7 @@ function Presence() {
 
       presenceHistory.forEach(presence => {
         if (matrix[presence.student_id]) {
-          const date = new Date(presence.datetime).toISOString().split('T')[0];
+          const date = getLocalDate(presence.datetime);
           matrix[presence.student_id].presences[date] = {
             status_id: presence.status_id,
             presence_id: presence.presence_id
@@ -101,7 +110,7 @@ function Presence() {
   const filteredDates = React.useMemo(() => {
     if (showToday) {
       const today = new Date();
-      return [today.toISOString().split('T')[0]];
+      return [getLocalDate(today)];
     }
 
     if (!selectedMonth) return [];
@@ -111,7 +120,7 @@ function Presence() {
     const dates = [];
 
     while (date.getMonth() === month) {
-      dates.push(new Date(date).toISOString().split('T')[0]);
+      dates.push(getLocalDate(date));
       date.setDate(date.getDate() + 1);
     }
     return dates; 
@@ -123,6 +132,79 @@ function Presence() {
       setPresenceHistory(prev => prev.map(p => p.presence_id === presence_id ? { ...p, status_id: newStatus } : p));
     }
   };
+  const handleAddPresence = async () => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const alreadyExists = presenceHistory.some(p =>
+      new Date(p.datetime).toISOString().split('T')[0] === today
+    );
+
+    if (alreadyExists) {
+      alert('Presensi hari ini sudah dibuat');
+      return;
+    }
+
+    await createPresencesForToday(studentsData);
+
+    const updatedPresence = await fetchAllPresencesData();
+    setPresenceHistory(updatedPresence);
+
+    alert('Presensi berhasil ditambahkan');
+  } catch (error) {
+    console.error(error);
+    alert('Gagal menambahkan presensi');
+  }
+};
+const indoDateToISO = (dateIndo) => {
+  // dateIndo: DD-MM-YYYY
+  const [day, month, year] = dateIndo.split("-");
+  return `${year}-${month}-${day}`;
+};
+const handleSubmitPresence = async ({
+    mode,
+    studentId,
+    statusId,
+    dateIndo,
+  }) => {
+    try {
+      const datetime = indoDateToISO(dateIndo);
+      let payload = [];
+
+      if (mode === 'all') {
+        payload = studentsData.map(s => ({
+          student_id: s.student_id,
+          status_id: statusId,
+          datetime,
+        }));
+      } else {
+        payload = [{
+          student_id: studentId,
+          status_id: statusId,
+          datetime,
+        }];
+      }
+      await upsertPresences(payload);
+
+      const updated = await fetchAllPresencesData();
+      setPresenceHistory(updated);
+
+      alert('Presensi berhasil disimpan');
+    } catch (err) {
+      console.error("ERROR PRESENSI:", err);
+      alert(err?.message || 'Gagal menyimpan presensi');
+    }
+  };
+
+  const [showModal, setShowModal] = useState(false);
+  const [mode, setMode] = useState('all'); // all | single
+  const [selectedStudent, setSelectedStudent] = useState('');
+  const [statusId, setStatusId] = useState(1);
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+  });
+
+
 
   const getStatusTextAndColor = (statusId) => {
       switch (statusId) {
@@ -190,7 +272,7 @@ function Presence() {
         <div className="flex items-center justify-between mb-4">
           <div className='flex flex-row gap-4 mb-2'>
             <div className="">
-              <button className="bg-black text-white px-4 py-2 rounded font-semibold">+ Tambah Presensi</button>
+              <button onClick={() => setShowModal(true)} className="bg-black text-white px-4 py-2 rounded font-semibold">+ Tambah Presensi</button>
             </div>
             <button onClick={handleDownloadCSV} className="bg-black text-white px-4 py-2 rounded font-semibold">Download Rekap Presensi</button>
           </div>
@@ -242,6 +324,98 @@ function Presence() {
           </table>
         </div>
       </main>
+    {showModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white rounded-xl w-full max-w-md p-6">
+          
+          <h2 className="text-lg font-bold mb-4">Tambah Presensi</h2>
+
+          {/* PILIH MODE */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">Jenis Presensi</label>
+            <select
+              value={mode}
+              onChange={e => setMode(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+            >
+              <option value="all">Semua Siswa</option>
+              <option value="single">Pilih Salah Satu Siswa</option>
+            </select>
+          </div>
+
+          {/* PILIH SISWA */}
+          {mode === 'single' && (
+            <div className="mb-4">
+              <label className="block font-semibold mb-1">Nama Siswa</label>
+              <select
+                value={selectedStudent}
+                onChange={e => setSelectedStudent(e.target.value)}
+                className="w-full border px-3 py-2 rounded"
+              >
+                <option value="">-- Pilih Siswa --</option>
+                {studentsData.map(s => (
+                  <option key={s.student_id} value={s.student_id}>
+                    {s.student_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* TANGGAL */}
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">Tanggal (DD-MM-YYYY)</label>
+            <input
+              type="text"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
+
+          {/* STATUS */}
+          <div className="mb-6">
+            <label className="block font-semibold mb-1">Status</label>
+            <select
+              value={statusId}
+              onChange={e => setStatusId(Number(e.target.value))}
+              className="w-full border px-3 py-2 rounded"
+            >
+              <option value={1}>Hadir</option>
+              <option value={2}>Sakit</option>
+              <option value={3}>Alpha</option>
+            </select>
+          </div>
+
+          {/* ACTION */}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-4 py-2 rounded border"
+            >
+              Batal
+            </button>
+
+            <button
+              onClick={() => {
+                handleSubmitPresence({
+                  mode,
+                  studentId: selectedStudent,
+                  statusId,
+                  dateIndo: date
+                });
+                setShowModal(false);
+              }}
+              className="px-4 py-2 rounded bg-black text-white font-semibold"
+            >
+              Simpan
+            </button>
+          </div>
+
+        </div>
+      </div>
+    )}
+
     </div>
   );
 }
